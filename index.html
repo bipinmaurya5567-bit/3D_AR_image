@@ -1,0 +1,315 @@
+                                                                                                                                                                                                                                                                                                                                                                                                        <!DOCTYPE html>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Earth AR</title>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { overflow: hidden; background: #000; }
+
+      #loading-screen {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: radial-gradient(ellipse at center, #050520 0%, #000008 70%, #000000 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-family: 'Courier New', monospace;
+        transition: opacity 1s ease;
+      }
+
+      .stars {
+        position: absolute;
+        width: 100%; height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .star {
+        position: absolute;
+        background: white;
+        border-radius: 50%;
+        animation: twinkle 2s infinite alternate;
+      }
+
+      @keyframes twinkle {
+        0% { opacity: 0.1; transform: scale(1); }
+        100% { opacity: 1; transform: scale(1.3); }
+      }
+
+      .earth-spinner {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1a6fff, #00cfff, #1a9e3f, #1a6fff);
+        background-size: 300% 300%;
+        animation: earthSpin 3s linear infinite, colorShift 4s ease infinite;
+        margin-bottom: 28px;
+        z-index: 1;
+        box-shadow: 0 0 30px #1a6fff88, 0 0 60px #1a6fff44;
+        position: relative;
+      }
+
+      .earth-spinner::after {
+        content: '';
+        position: absolute;
+        top: -6px; left: -6px;
+        right: -6px; bottom: -6px;
+        border-radius: 50%;
+        border: 1px solid #4a9eff44;
+        animation: orbitRing 2s linear infinite;
+      }
+
+      @keyframes earthSpin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes colorShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      @keyframes orbitRing {
+        from { transform: rotate(0deg) scale(1); }
+        to { transform: rotate(-360deg) scale(1); }
+      }
+
+      #loading-screen h1 {
+        color: #4a9eff;
+        font-size: 26px;
+        letter-spacing: 8px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        z-index: 1;
+        text-shadow: 0 0 30px #4a9eff, 0 0 60px #4a9eff55;
+      }
+
+      #loading-screen p {
+        color: #7ab8ff;
+        font-size: 11px;
+        letter-spacing: 4px;
+        opacity: 0.6;
+        margin-bottom: 36px;
+        z-index: 1;
+        text-transform: uppercase;
+      }
+
+      .loader-bar {
+        width: 200px;
+        height: 1px;
+        background: #0a1a3a;
+        border-radius: 10px;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .loader-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1a6fff, #00cfff, #4a9eff);
+        border-radius: 10px;
+        animation: load 3s ease-in-out forwards;
+        box-shadow: 0 0 8px #4a9eff;
+      }
+
+      @keyframes load {
+        0% { width: 0%; }
+        100% { width: 100%; }
+      }
+
+      #hint {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 5, 30, 0.8);
+        color: #4a9eff;
+        padding: 10px 22px;
+        border-radius: 30px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        letter-spacing: 1px;
+        border: 1px solid #4a9eff44;
+        z-index: 999;
+        white-space: nowrap;
+        box-shadow: 0 0 15px #4a9eff22;
+        display: none;
+      }
+
+      #scan-frame {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 200px;
+        z-index: 998;
+        pointer-events: none;
+        display: none;
+      }
+
+      #scan-frame::before,
+      #scan-frame::after,
+      #scan-frame span::before,
+      #scan-frame span::after {
+        content: '';
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        border-color: #4a9eff;
+        border-style: solid;
+        box-shadow: 0 0 8px #4a9eff66;
+      }
+
+      #scan-frame::before  { top: 0; left: 0;  border-width: 2px 0 0 2px; }
+      #scan-frame::after   { top: 0; right: 0; border-width: 2px 2px 0 0; }
+      #scan-frame span::before { bottom: 0; left: 0;  border-width: 0 0 2px 2px; }
+      #scan-frame span::after  { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+      .scan-line {
+        position: absolute;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #4a9eff, #00cfff, #4a9eff, transparent);
+        top: 0;
+        animation: scan 2.5s ease-in-out infinite;
+        box-shadow: 0 0 6px #4a9eff;
+      }
+
+      @keyframes scan {
+        0%   { top: 0%;   opacity: 1; }
+        100% { top: 100%; opacity: 0.2; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+      <div class="stars" id="stars"></div>
+      <div class="earth-spinner"></div>
+      <h1>Earth AR</h1>
+      <p>Loading AR Scanner</p>
+      <div class="loader-bar">
+        <div class="loader-fill"></div>
+      </div>
+    </div>
+
+    <!-- Scan Frame -->
+    <div id="scan-frame">
+      <span></span>
+      <div class="scan-line"></div>
+    </div>
+
+    <!-- Hint -->
+    <div id="hint">🌍 Point camera at the Earth image</div>
+
+    <!-- AR Scene -->
+    <a-scene
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;"
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets>
+        <a-asset-item id="earth-model" src="./Earth.glb"></a-asset-item>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity mindar-image-target="targetIndex: 0">
+
+        <!-- Atmosphere glow -->
+        <a-sphere
+          color="#1a6fff"
+          radius="0.36"
+          opacity="0.06"
+          position="0 0.08 0"
+          animation="property: scale; from: 1 1 1; to: 1.08 1.08 1.08; dur: 2500; loop: true; dir: alternate; easing: easeInOutSine"
+        ></a-sphere>
+
+        <!-- Inner orbit ring -->
+        <a-ring
+          color="#4a9eff"
+          radius-inner="0.40"
+          radius-outer="0.42"
+          rotation="-80 0 0"
+          position="0 0.08 0"
+          opacity="0.5"
+          animation="property: rotation; from: -80 0 0; to: -80 360 0; dur: 7000; loop: true; easing: linear"
+        ></a-ring>
+
+        <!-- Outer orbit ring -->
+        <a-ring
+          color="#00cfff"
+          radius-inner="0.50"
+          radius-outer="0.51"
+          rotation="-65 30 0"
+          position="0 0.08 0"
+          opacity="0.25"
+          animation="property: rotation; from: -65 30 0; to: -65 390 0; dur: 11000; loop: true; easing: linear"
+        ></a-ring>
+
+        <!-- Earth 3D Model -->
+        <a-gltf-model
+          src="#earth-model"
+          position="0 0.08 0"
+          scale="0.25 0.25 0.25"
+          animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 9000; loop: true; easing: linear"
+          animation__float="property: position; from: 0 0.06 0; to: 0 0.14 0; dur: 3500; loop: true; dir: alternate; easing: easeInOutSine"
+        ></a-gltf-model>
+
+        <!-- Soft ambient -->
+        <a-light type="ambient" color="#102244" intensity="0.5"></a-light>
+
+        <!-- Sun light -->
+        <a-light type="directional" color="#ffffff" intensity="3" position="4 3 2"></a-light>
+
+        <!-- Blue glow -->
+        <a-light type="point" color="#4a9eff" intensity="0.5" distance="1.5" position="0 0.5 0.3"></a-light>
+
+      </a-entity>
+    </a-scene>
+
+    <script>
+      // Generate stars background
+      const starsEl = document.getElementById('stars');
+      for (let i = 0; i < 120; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        const sz = Math.random() * 2 + 0.5;
+        s.style.cssText = `
+          width:${sz}px; height:${sz}px;
+          top:${Math.random()*100}%;
+          left:${Math.random()*100}%;
+          animation-delay:${Math.random()*4}s;
+          animation-duration:${Math.random()*2+1}s;
+        `;
+        starsEl.appendChild(s);
+      }
+
+      // Hide loading screen after AR loads
+      document.querySelector('a-scene').addEventListener('loaded', () => {
+        setTimeout(() => {
+          const ls = document.getElementById('loading-screen');
+          ls.style.opacity = '0';
+          setTimeout(() => {
+            ls.style.display = 'none';
+            document.getElementById('scan-frame').style.display = 'block';
+            document.getElementById('hint').style.display = 'block';
+          }, 1000);
+        }, 3000);
+      });
+    </script>
+
+  </body>
+</html>
