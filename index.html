@@ -3,168 +3,61 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tennis Ball AR</title>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { overflow: hidden; background: #000; }
+      body { overflow: hidden; }
 
       #loading-screen {
         position: fixed;
-        top: 0; left: 0;
         width: 100%; height: 100%;
-        background: radial-gradient(ellipse at center, #1a1a00 0%, #0a0a00 70%, #000000 100%);
+        background: #000;
         display: flex;
         flex-direction: column;
-        align-items: center;
         justify-content: center;
+        align-items: center;
         z-index: 9999;
-        font-family: 'Courier New', monospace;
+        color: white;
+        font-family: Arial, sans-serif;
         transition: opacity 1s ease;
       }
 
-      .ball-spinner {
-        width: 90px;
-        height: 90px;
+      .spinner {
+        width: 60px; height: 60px;
+        border: 6px solid #333;
+        border-top: 6px solid #adff2f;
         border-radius: 50%;
-        background: radial-gradient(circle at 35% 35%, #ccff00, #88cc00, #446600);
-        animation: spin 2s linear infinite;
-        margin-bottom: 28px;
-        z-index: 1;
-        box-shadow: 0 0 30px #aaff0088, 0 0 60px #aaff0044;
-        position: relative;
-      }
-
-      .ball-spinner::before {
-        content: '';
-        position: absolute;
-        top: 50%; left: 10%;
-        width: 80%; height: 4px;
-        background: rgba(255,255,255,0.4);
-        border-radius: 50%;
-        transform: translateY(-50%) rotate(-20deg);
-      }
-
-      .ball-spinner::after {
-        content: '';
-        position: absolute;
-        top: 60%; left: 10%;
-        width: 80%; height: 4px;
-        background: rgba(255,255,255,0.3);
-        border-radius: 50%;
-        transform: rotate(20deg);
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
       }
 
       @keyframes spin {
-        from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
       }
 
-      #loading-screen h1 {
-        color: #ccff00;
-        font-size: 22px;
-        letter-spacing: 6px;
-        text-transform: uppercase;
-        margin-bottom: 6px;
-        z-index: 1;
-        text-shadow: 0 0 20px #ccff00, 0 0 40px #ccff0055;
-      }
-
       #loading-screen p {
-        color: #aadd00;
-        font-size: 11px;
-        letter-spacing: 3px;
-        opacity: 0.6;
-        margin-bottom: 32px;
-        z-index: 1;
-        text-transform: uppercase;
-      }
-
-      .loader-bar {
-        width: 200px;
-        height: 2px;
-        background: #1a2000;
-        border-radius: 10px;
-        overflow: hidden;
-        z-index: 1;
-      }
-
-      .loader-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #ccff00, #88ff00, #ccff00);
-        border-radius: 10px;
-        animation: load 3s ease-in-out forwards;
-        box-shadow: 0 0 8px #ccff00;
-      }
-
-      @keyframes load {
-        0% { width: 0%; }
-        100% { width: 100%; }
+        font-size: 18px;
+        color: #adff2f;
+        letter-spacing: 1px;
       }
 
       #hint {
-        position: fixed;
-        bottom: 28px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(10, 20, 0, 0.85);
-        color: #ccff00;
-        padding: 10px 22px;
-        border-radius: 30px;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        letter-spacing: 1px;
-        border: 1px solid #ccff0044;
-        z-index: 999;
-        white-space: nowrap;
-        box-shadow: 0 0 15px #ccff0022;
         display: none;
-      }
-
-      #scan-frame {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 200px;
-        height: 200px;
-        z-index: 998;
-        pointer-events: none;
-        display: none;
-      }
-
-      #scan-frame::before,
-      #scan-frame::after,
-      #scan-frame span::before,
-      #scan-frame span::after {
-        content: '';
-        position: absolute;
-        width: 28px;
-        height: 28px;
-        border-color: #ccff00;
-        border-style: solid;
-        box-shadow: 0 0 8px #ccff0066;
-      }
-
-      #scan-frame::before  { top: 0; left: 0;  border-width: 2px 0 0 2px; }
-      #scan-frame::after   { top: 0; right: 0; border-width: 2px 2px 0 0; }
-      #scan-frame span::before { bottom: 0; left: 0;  border-width: 0 0 2px 2px; }
-      #scan-frame span::after  { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
-
-      .scan-line {
-        position: absolute;
+        bottom: 30px;
         width: 100%;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, #ccff00, #88ff00, #ccff00, transparent);
-        top: 0;
-        animation: scan 2s ease-in-out infinite;
-        box-shadow: 0 0 6px #ccff00;
+        text-align: center;
+        z-index: 999;
+        font-family: Arial, sans-serif;
       }
 
-      @keyframes scan {
-        0%   { top: 0%;   opacity: 1; }
-        100% { top: 100%; opacity: 0.2; }
+      #hint span {
+        background: rgba(0,0,0,0.6);
+        color: #adff2f;
+        padding: 10px 20px;
+        border-radius: 30px;
+        font-size: 15px;
       }
     </style>
   </head>
@@ -172,73 +65,37 @@
 
     <!-- Loading Screen -->
     <div id="loading-screen">
-      <div class="ball-spinner"></div>
-      <h1>Tennis AR</h1>
-      <p>Loading AR Scanner</p>
-      <div class="loader-bar">
-        <div class="loader-fill"></div>
-      </div>
-    </div>
-
-    <!-- Scan Frame -->
-    <div id="scan-frame">
-      <span></span>
-      <div class="scan-line"></div>
+      <div class="spinner"></div>
+      <p>Loading AR...</p>
     </div>
 
     <!-- Hint -->
-    <div id="hint">🎾 Point camera at the Tennis Ball image</div>
+    <div id="hint">
+      <span>🎾 Point camera at the Tennis Ball image</span>
+    </div>
 
     <!-- AR Scene -->
     <a-scene
-      mindar-image="imageTargetSrc: ./targets_boll.mind; autoStart: true;"
+      mindar-image="imageTargetSrc: ./targets-boll.mind; autoStart: true;"
       color-space="sRGB"
-      renderer="colorManagement: true, physicallyCorrectLights"
+      renderer="colorManagement: true"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
     >
       <a-assets>
-        <a-asset-item id="ball-model" src="./Tennis ball.glb"></a-asset-item>
+        <a-asset-item id="tennis-ball" src="./Tennis ball.glb"></a-asset-item>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
-
-        <!-- Shadow circle on ground -->
-        <a-circle
-          color="#000000"
-          radius="0.18"
-          rotation="-90 0 0"
-          position="0 0 0"
-          opacity="0.3"
-        ></a-circle>
-
-        <!-- Glow ring -->
-        <a-ring
-          color="#ccff00"
-          radius-inner="0.20"
-          radius-outer="0.22"
-          rotation="-90 0 0"
-          position="0 0 0"
-          opacity="0.5"
-          animation="property: opacity; from: 0.2; to: 0.8; dur: 1000; loop: true; dir: alternate; easing: easeInOutSine"
-        ></a-ring>
-
-        <!-- Tennis Ball 3D Model -->
         <a-gltf-model
-          src="#ball-model"
-          position="0 0.15 0"
-          scale="0.25 0.25 0.25"
-          animation="property: rotation; from: 0 0 0; to: 0 360 0; dur: 4000; loop: true; easing: linear"
-          animation__float="property: position; from: 0 0.12 0; to: 0 0.22 0; dur: 1500; loop: true; dir: alternate; easing: easeInOutSine"
+          src="#tennis-ball"
+          position="0 0 0.1"
+          scale="0.5 0.5 0.5"
+          rotation="0 0 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear"
         ></a-gltf-model>
-
-        <!-- Lights -->
-        <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
-        <a-light type="directional" color="#ffffff" intensity="2" position="2 4 2"></a-light>
-        <a-light type="point" color="#ccff00" intensity="0.4" distance="1.5" position="0 0.5 0"></a-light>
-
       </a-entity>
     </a-scene>
 
@@ -249,7 +106,6 @@
           ls.style.opacity = '0';
           setTimeout(() => {
             ls.style.display = 'none';
-            document.getElementById('scan-frame').style.display = 'block';
             document.getElementById('hint').style.display = 'block';
           }, 1000);
         }, 3000);
